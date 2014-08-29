@@ -1,4 +1,4 @@
 waitd
 =====
 
-Timings management
+Javascript timings management
