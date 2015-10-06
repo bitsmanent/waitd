@@ -1,71 +1,60 @@
 (function(window) {
 "use strict";
 
-var
-	processes = [],
+var processes = [];
 
-	getnewpid = function() {
-		return processes.length;
-	},
+function load(p) {
+	var pid = processes.length; /* next available pid */
+	processes[pid] = p;
+	return pid;
+}
 
-	load = function(p) {
-		var pid = getnewpid();
-		processes[pid] = p;
-		return pid;
-	},
+function exec(pid) {
+	var p = processes[pid];
 
-	exec = function(pid, delay) {
-		var p = processes[pid];
-
-		return setTimeout(function() {
-			p.callback(pid);
-			processes[pid].tm = 0;
-			processes[pid].rdelay = 0;
-		}, delay);
-	},
-
-	run = function(pid) {
-		var p = processes[pid];
-
-		p.start = new Date();
-		p.tm = exec(pid, p.delay);
-
-		processes[pid].tm = p.tm;
-		processes[pid].start = p.start;
-	},
-
-	spawn = function(delay, callback) {
-		var pid = load({
-			delay: delay,
-			rdelay: 0,
-			tm: 0,
-			start: 0,
-			callback: callback
-		});
-
-		run(pid);
-		return pid;
-	},
-
-	kill = function(pid) {
-		var p = processes[pid];
-		clearTimeout(p.tm);
+	p.start = new Date();
+	p.tm = setTimeout(function() {
+		p.callback(pid);
 		processes[pid].tm = 0;
-	},
+		processes[pid].rdelay = 0;
+	}, p.delay);
 
-	suspend = function(pid) {
-		var	p = processes[pid],
-			d = new Date();
+	processes[pid].tm = p.tm;
+	processes[pid].start = p.start;
+}
 
-		kill(pid);
-		p.rdelay = (d - p.start);
-	},
+function spawn(delay, callback) {
+	var pid = load({
+		delay: delay,
+		rdelay: 0,
+		tm: 0,
+		start: 0,
+		callback: callback
+	});
 
-	resume = function(pid) {
-		processes[pid].tm = exec(pid, processes[pid].rdelay);
-	};
+	exec(pid);
+	return pid;
+}
 
-/* API */
+function kill(pid) {
+	var p = processes[pid];
+	clearTimeout(p.tm);
+	processes[pid].tm = 0;
+}
+
+function suspend(pid) {
+	var	p = processes[pid],
+		d = new Date();
+
+	kill(pid);
+	p.rdelay = (d - p.start);
+}
+
+function resume(pid) {
+	processes[pid].tm = exec(pid, processes[pid].rdelay);
+}
+
+/* api */
 var waitd = {
 	play: function(d, c) {
 		if(c === undefined) {
@@ -80,10 +69,9 @@ var waitd = {
 
 	update: function(pid, cfg) {
 		kill(pid);
-		for(var c in cfg) {
+		for(var c in cfg)
 			processes[pid][c] = cfg[c];
-		}
-		run(pid);
+		exec(pid);
 	},
 
 	getproc: function(pid) {
