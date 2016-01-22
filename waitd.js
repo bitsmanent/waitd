@@ -54,8 +54,8 @@ function resume(pid) {
 	processes[pid].tm = exec(pid, processes[pid].rdelay);
 }
 
-/* api */
-var waitd = {
+/* public */
+window.waitd = window.w$ = waitd = {
 	play: function(d, c) {
 		if(c === undefined) {
 			resume(d);
@@ -93,6 +93,4 @@ var waitd = {
 		return (p.tm == 0 && p.rdelay == 0);
 	}
 };
-
-window.waitd = window.w$ = waitd;
 })(window);
